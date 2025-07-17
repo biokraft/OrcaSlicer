@@ -3,10 +3,14 @@
 [![CI](https://github.com/cbatu/OrcaSlicer/actions/workflows/ci.yml/badge.svg)](https://github.com/cbatu/OrcaSlicer/actions/workflows/ci.yml)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![uv](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v0.json)](https://github.com/astral-sh/uv)
+[![pytest](https://img.shields.io/badge/pytest-6.2.5-grey.svg)](https://docs.pytest.org/en/latest/)
+[![pytest-cov](https://img.shields.io/badge/pytest--cov-4.1.0-red.svg)](https://pytest-cov.readthedocs.io/en/latest/)
 
 [![Python](https://img.shields.io/badge/Python-3776AB?logo=python&logoColor=fff)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=fff)](https://fastapi.tiangolo.com/)
 [![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=fff)](https://www.docker.com/)
+[![smol-agents](https://img.shields.io/badge/smol--agents-5A6978.svg)](https://github.com/smol-ai/smol-agent)
+[![Ollama](https://img.shields.io/badge/Ollama-lightgrey.svg)](https://ollama.com/)
 
 This directory contains the containerized Python backend for the AI Assistant in OrcaSlicer. It is a self-contained system built with **FastAPI** and **`smolagents`** that provides the chat logic and agentic capabilities for the main application.
 
@@ -19,21 +23,18 @@ The system runs as a collection of orchestrated Docker services, ensuring a clea
 ```mermaid
 graph TD
     subgraph OrcaSlicer Application
-        A[C++ UI]
+        A[C++ UI];
     end
 
-    subgraph Docker Network
-        B[API Service (FastAPI)]
-        C[Ollama Service]
-        D[Ollama Init Service]
+    subgraph "Docker Network"
+        B["API Service (FastAPI)"];
+        C["Ollama Service"];
+        D["Ollama Init Service"];
     end
 
-    A -- HTTP Requests --> B
-    B -- LLM Calls --> C
-    D -- Pulls Models --> C
-
-    linkStyle 2 stroke-width:2px,fill:none,stroke:green;
-    linkStyle 3 stroke-width:2px,fill:none,stroke:blue;
+    A -- HTTP Requests --> B;
+    B -- LLM Calls --> C;
+    D -- Pulls Models --> C;
 ```
 
 -   **API Service**: The core FastAPI application that serves the API, manages agent logic, and handles chat sessions.
