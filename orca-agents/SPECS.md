@@ -19,10 +19,10 @@ This project, codenamed "Orca Agents," provides the containerized Python backend
 
 | Phase | Focus Area | Key Deliverables | Related Specs | Status |
 |---|---|---|---|---|
-| **Phase 1: Foundation** | Project Scaffolding | Create `pyproject.toml` and initial `orca_agents` directory structure. | `development_environment.md` | TBD |
-| | Dev Environment | Configure `uv`, `ruff`, `pre-commit`, and create `Makefile` for common tasks. | `development_environment.md`, `coding_standards.md` | TBD |
-| | Docker Setup | Create `Dockerfile.api` and `docker-compose.yml` for `api` and `ollama` services. | `architecture.md` | TBD |
-| | CI Pipeline | Set up CI pipeline to run `lint` and `test` on all pull requests. | `testing_strategy.md` | TBD |
+| **Phase 1: Foundation** | Project Scaffolding | Create `pyproject.toml` and initial `orca_agents` directory structure. | `development_environment.md` | ✅ **DONE** |
+| | Dev Environment | Configure `uv`, `ruff`, `pre-commit`, and create `Makefile` for common tasks. | `development_environment.md`, `coding_standards.md` | ✅ **DONE** |
+| | Docker Setup | Create `Dockerfile.api` and `docker-compose.yml` for `api` and `ollama` services. | `architecture.md` | ✅ **DONE** |
+| | CI Pipeline | Set up CI pipeline to run `lint` and `test` on all pull requests. | `testing_strategy.md` | ✅ **DONE** |
 | **Phase 2: Core API & Agent** | FastAPI Application | Implement FastAPI app with `/api/health`, `/api/chat`, and Pydantic models. | `api_endpoints.md`, `coding_standards.md` | TBD |
 | | Manager Agent | Implement the main `ManagerAgent` with `LiteLLMModel` integration for Ollama. | `agentic_architecture.md` | TBD |
 | | Unit Tests (Core) | Implement unit tests for API logic and core utilities, mocking external services. | `testing_strategy.md` | TBD |
