@@ -8,3 +8,5 @@ resources/*
 !resources/web/
 !resources/dailytip
 !resources/shaders
+!SPECS.md
+!specs/
