@@ -30,7 +30,7 @@ A more robust and maintainable pattern is to delegate web browsing to a speciali
 
 3.  **Manager Agent (The Orchestrator)**: A more powerful `CodeAgent` that handles the main user query.
     -   **Tools**: It has no direct tools of its own. Its only "tool" is the `managed_web_agent`.
-    -   **Model**: Should be a more powerful reasoning model (e.g., `qwen:7b`), as it needs to understand the user's high-level goal, delegate to the web surfer, and process the results to formulate a final answer.
+    -   **Model**: Should be a more powerful reasoning model (e.g., `qwen3:8b`), as it needs to understand the user's high-level goal, delegate to the web surfer, and process the results to formulate a final answer.
 
 ### Example Implementation
 
@@ -45,7 +45,7 @@ from smolagents import (
 from smolagents.tools.web_search import VisitWebpageTool
 
 # Use a powerful model for the manager for better reasoning
-manager_model = LiteLLMModel(model_id="ollama/qwen:7b") 
+manager_model = LiteLLMModel(model_id="ollama/qwen3:8b") 
 
 # A smaller, faster model is sufficient for the specialized web agent
 web_agent_model = LiteLLMModel(model_id="ollama/qwen:0.5b")

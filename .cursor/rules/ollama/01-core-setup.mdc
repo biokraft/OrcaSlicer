@@ -32,7 +32,7 @@ class Config(BaseSettings):
 
     # Optional: Secondary model for specialized tasks
     reasoning_model: str = Field(
-        default="ollama/qwen:7b",
+        default="ollama/qwen3:8b",
         description="Model for complex reasoning tasks"
     )
 ```
@@ -46,7 +46,7 @@ Implement a two-tier environment variable approach:
 # Used by the application code
 OLLAMA_BASE_URL=http://localhost:11434
 PRIMARY_MODEL=ollama/qwen3:0.6b
-REASONING_MODEL=ollama/qwen:7b
+REASONING_MODEL=ollama/qwen3:8b
 ```
 
 **Container Configuration (if using Docker):**
@@ -73,7 +73,7 @@ LIGHTWEIGHT_MODELS = [
 
 # Standard environments (developer machines, servers)
 STANDARD_MODELS = [
-    "ollama/qwen:7b",        # 7GB - Good reasoning capabilities
+    "ollama/qwen3:8b",        # 7GB - Good reasoning capabilities
     "ollama/llama3.1:8b",    # 8GB - Strong general purpose
     "ollama/mistral:7b",     # 7GB - Fast and capable
 ]

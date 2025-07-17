@@ -532,7 +532,7 @@ services:
     ports:
       - "11434:11434"
     environment:
-      - OLLAMA_MODELS=qwen3:0.6b,qwen:7b  # Lightweight models
+      - OLLAMA_MODELS=qwen3:0.6b,qwen3:8b  # Lightweight models
     deploy:
       resources:
         limits:

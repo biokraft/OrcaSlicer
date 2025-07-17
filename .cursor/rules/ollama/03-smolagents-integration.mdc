@@ -178,7 +178,7 @@ class MultiAgentOrchestrator:
         self.manager_agent = None
         self.specialized_agents = {}
 
-    def setup_manager_agent(self, model_id: str = "qwen:7b") -> CodeAgent:
+    def setup_manager_agent(self, model_id: str = "qwen3:8b") -> CodeAgent:
         """Setup the manager agent with a powerful model for reasoning."""
         if self.manager_agent is None:
             self.manager_agent = self.factory.create_code_agent(
@@ -265,7 +265,7 @@ class SmartModelSelector:
     def __init__(self):
         self.model_tiers = {
             "lightweight": ["qwen3:0.6b", "phi3:mini", "llama3.2:1b"],
-            "standard": ["qwen:7b", "llama3.1:8b", "mistral:7b"],
+            "standard": ["qwen3:8b", "llama3.1:8b", "mistral:7b"],
             "heavy": ["qwen:14b", "llama3.1:70b", "mixtral:8x7b"],
         }
 

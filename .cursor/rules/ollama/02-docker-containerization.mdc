@@ -67,7 +67,7 @@ services:
       "
       echo 'Pulling required models...'
       ollama pull ${PRIMARY_MODEL:-qwen3:0.6b}
-      ollama pull ${REASONING_MODEL:-qwen:7b}
+      ollama pull ${REASONING_MODEL:-qwen3:8b}
       echo 'Model initialization complete'
       "
     environment:
@@ -197,7 +197,7 @@ services:
       - app-network
     environment:
       - OLLAMA_HOST=0.0.0.0:11434
-      - OLLAMA_MODELS=qwen:7b
+      - OLLAMA_MODELS=qwen3:8b
     healthcheck:
       test: ["CMD", "ollama", "list"]
       interval: 30s
@@ -267,7 +267,7 @@ services:
       - prod-network
     environment:
       - OLLAMA_HOST=0.0.0.0:11434
-      - OLLAMA_MODELS=qwen:7b,qwen3:0.6b
+      - OLLAMA_MODELS=qwen3:8b,qwen3:0.6b
       - OLLAMA_MAX_LOADED_MODELS=2
     healthcheck:
       test: ["CMD", "ollama", "list"]
@@ -292,7 +292,7 @@ services:
     image: myapp:${APP_VERSION}
     environment:
       - OLLAMA_BASE_URL=http://ollama:11434
-      - PRIMARY_MODEL=ollama/qwen:7b
+      - PRIMARY_MODEL=ollama/qwen3:8b
     depends_on:
       ollama:
         condition: service_healthy
@@ -370,7 +370,7 @@ ollama-down: ## Stop Ollama service
 
 ollama-pull: ## Pull required models
 	docker compose exec ollama ollama pull qwen3:0.6b
-	docker compose exec ollama ollama pull qwen:7b
+	docker compose exec ollama ollama pull qwen3:8b
 
 ollama-models: ## List available models
 	docker compose exec ollama ollama list
@@ -399,8 +399,8 @@ OLLAMA_VERSION=latest
 
 # Model Configuration
 PRIMARY_MODEL=qwen3:0.6b
-REASONING_MODEL=qwen:7b
-OLLAMA_MODELS=qwen3:0.6b,qwen:7b
+REASONING_MODEL=qwen3:8b
+OLLAMA_MODELS=qwen3:0.6b,qwen3:8b
 
 # Performance Tuning
 OLLAMA_MAX_LOADED_MODELS=3
