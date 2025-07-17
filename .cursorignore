@@ -10,3 +10,4 @@ resources/*
 !resources/shaders
 !SPECS.md
 !specs/
+!research/
