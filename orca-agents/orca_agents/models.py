@@ -21,7 +21,15 @@ class ChatRequest(BaseModel):
     conversation_id: str | None = Field(
         default=None, description="Optional conversation ID for context"
     )
-    model: str = Field(default="qwen3", description="AI model to use for the response")
+    model: str | None = Field(
+        default=None, description="AI model to use (chat/reasoning model)"
+    )
+    use_manager: bool = Field(
+        default=False, description="Whether to use the manager agent for complex tasks"
+    )
+    reset_context: bool = Field(
+        default=False, description="Whether to reset the conversation context"
+    )
     stream: bool = Field(default=False, description="Whether to stream the response")
 
 

@@ -4,31 +4,59 @@ services:
   api:
     build:
       context: .
+      target: development
     ports:
-      - "8000:8000"
+      - "${API_PORT:-8000}:8000"
     environment:
-      - OLLAMA_URL=http://ollama:11434
+      - OLLAMA_CHAT_URL=http://ollama-chat:11434
+      - OLLAMA_REASONING_URL=http://ollama-reasoning:11434
+      - CHAT_MODEL=${CHAT_MODEL:-ollama/qwen3:0.6b}
+      - REASONING_MODEL=${REASONING_MODEL:-ollama/qwen3:8b}
       - ENVIRONMENT=development
+      - DEBUG=true
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
     volumes:
-      - ./app:/app/app  # Mount source code for hot reload
+      - ./orca_agents:/app/orca_agents  # Mount source code for hot reload
       - ./pyproject.toml:/app/pyproject.toml
+      - ./uv.lock:/app/uv.lock
+      - api_logs:/app/logs
     depends_on:
-      - ollama
+      ollama-chat:
+        condition: service_healthy
+      ollama-reasoning:
+        condition: service_healthy
     networks:
       - orca-agents-network
     restart: unless-stopped
 
-  ollama:
-    image: ollama/ollama:latest
+  # Fast, lightweight Ollama service for chat and quick responses
+  ollama-chat:
+    container_name: "${PROJECT_NAME:-orca-agents}-ollama-chat"
+    image: ollama/ollama:${OLLAMA_VERSION:-latest}
     ports:
-      - "11434:11434"
+      - "${OLLAMA_CHAT_PORT:-11434}:11434"
     volumes:
-      - ollama_data:/root/.ollama
+      - ollama_chat_data:/root/.ollama
     environment:
-      - OLLAMA_HOST=0.0.0.0
+      - OLLAMA_HOST=${OLLAMA_CHAT_HOST:-0.0.0.0:11434}
+      - OLLAMA_MODELS=${OLLAMA_CHAT_MODELS:-qwen3:0.6b}
+      - OLLAMA_MAX_LOADED_MODELS=2
+      - OLLAMA_KEEP_ALIVE=5m
     networks:
       - orca-agents-network
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: ${OLLAMA_CHAT_MEMORY_LIMIT:-4G}
+        reservations:
+          memory: ${OLLAMA_CHAT_MEMORY_RESERVATION:-2G}
     # Uncomment the following lines if you have a GPU
     # deploy:
     #   resources:
@@ -38,8 +66,76 @@ services:
     #           count: 1
     #           capabilities: [gpu]
 
+  # Larger, more capable Ollama service for complex reasoning tasks
+  ollama-reasoning:
+    container_name: "${PROJECT_NAME:-orca-agents}-ollama-reasoning"
+    image: ollama/ollama:${OLLAMA_VERSION:-latest}
+    ports:
+      - "${OLLAMA_REASONING_PORT:-11435}:11434"
+    volumes:
+      - ollama_reasoning_data:/root/.ollama
+    environment:
+      - OLLAMA_HOST=${OLLAMA_REASONING_HOST:-0.0.0.0:11434}
+      - OLLAMA_MODELS=${OLLAMA_REASONING_MODELS:-qwen3:8b}
+      - OLLAMA_MAX_LOADED_MODELS=1
+      - OLLAMA_KEEP_ALIVE=10m
+    networks:
+      - orca-agents-network
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: ${OLLAMA_REASONING_MEMORY_LIMIT:-12G}
+        reservations:
+          memory: ${OLLAMA_REASONING_MEMORY_RESERVATION:-8G}
+    # Uncomment the following lines if you have a GPU
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+
+  # Model initialization service to pull required models
+  ollama-init:
+    container_name: "${PROJECT_NAME:-orca-agents}-ollama-init"
+    image: ollama/ollama:${OLLAMA_VERSION:-latest}
+    volumes:
+      - ollama_chat_data:/root/.ollama
+      - ollama_reasoning_data:/tmp/reasoning-ollama
+    networks:
+      - orca-agents-network
+    depends_on:
+      ollama-chat:
+        condition: service_healthy
+      ollama-reasoning:
+        condition: service_healthy
+    entrypoint: ["sh", "-c"]
+    command: |
+      "
+      echo 'Initializing models for chat service...'
+      OLLAMA_HOST=http://ollama-chat:11434 ollama pull ${CHAT_MODEL:-qwen3:0.6b}
+      
+      echo 'Initializing models for reasoning service...'
+      OLLAMA_HOST=http://ollama-reasoning:11434 ollama pull ${REASONING_MODEL:-qwen3:8b}
+      
+      echo 'Model initialization complete!'
+      "
+    restart: "no"
+
 volumes:
-  ollama_data:
+  ollama_chat_data:
+    driver: local
+  ollama_reasoning_data:
+    driver: local
+  api_logs:
     driver: local
 
 networks:
