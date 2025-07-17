@@ -28,18 +28,22 @@ graph TD
 
     subgraph "Docker Network"
         B["API Service (FastAPI)"];
-        C["Ollama Service"];
+        C["Ollama Chat Service"];
+        E["Ollama Reasoning Service"];
         D["Ollama Init Service"];
     end
 
     A -- HTTP Requests --> B;
-    B -- LLM Calls --> C;
-    D -- Pulls Models --> C;
+    B -- "LLM Calls (Chat)" --> C;
+    B -- "LLM Calls (Reasoning)" --> E;
+    D -- "Pulls Models" --> C;
+    D -- "Pulls Models" --> E;
 ```
 
 -   **API Service**: The core FastAPI application that serves the API, manages agent logic, and handles chat sessions.
--   **Ollama Service**: Runs the core Ollama server for LLM inference.
--   **Ollama Init Service**: A one-off startup service that pulls the required LLM models specified in the `.env` file, ensuring they are available before the API starts.
+-   **Ollama Chat Service**: Runs an Ollama server for the primary, lightweight model.
+-   **Ollama Reasoning Service**: Runs a separate Ollama server for the powerful reasoning model.
+-   **Ollama Init Service**: A one-off startup service that pulls the required LLM models into their respective services.
 
 ## 🚀 Quick Start
 
@@ -56,12 +60,16 @@ First, create your local configuration file from the example.
 cp .env.example .env
 ```
 
-Now, open the `.env` file and review the model settings. The defaults are set for a standard development machine.
+Now, open the `.env` file and review the model settings and service URLs.
 
 ```env
 # .env
 PRIMARY_MODEL=ollama/qwen3:0.6b
-REASONING_MODEL=ollama/qwen:7b
+REASONING_MODEL=ollama/qwen3:8b
+
+# Base URLs for the dedicated Ollama containers
+CHAT_OLLAMA_URL=http://ollama-chat:11434
+REASONING_OLLAMA_URL=http://ollama-reasoning:11434
 ```
 
 ### 2. Launch the Backend
@@ -75,8 +83,8 @@ make up
 
 This command will:
 1.  Build the `api` service's Docker image.
-2.  Start the `ollama` service.
-3.  Run the `ollama-init` service to download the models.
+2.  Start the `ollama-chat` and `ollama-reasoning` services.
+3.  Run the `ollama-init` service to download the models into the correct services.
 4.  Start the `api` service with hot-reloading enabled.
 
 ## 🛠️ Development Workflow
@@ -96,7 +104,7 @@ All primary development tasks are run through Docker via the `Makefile` to ensur
 
 The API is served at `http://localhost:8000`. Key endpoints include:
 
--   `GET /api/health`: Health check for the service and its connection to Ollama.
+-   `GET /api/health`: Health check for the service and its connection to both Ollama instances.
 -   `POST /api/chat`: The primary endpoint for chat interactions.
 
 For the detailed API contract, see the [API Endpoints Specification](./specs/api_endpoints.md).

@@ -20,9 +20,13 @@ from pydantic import Field
 from pydantic_settings import BaseSettings
 
 class Config(BaseSettings):
-    ollama_base_url: str = Field(default="http://ollama:11434", description="Base URL for Ollama API")
-    primary_model: str = Field(default="ollama/qwen3:0.6b", description="Primary LLM model")
-    reasoning_model: str = Field(default="ollama/qwen:7b", description="Reasoning LLM model")
+    # Model configuration
+    primary_model: str = Field(default="ollama/qwen3:0.6b", description="Fast model for the orchestrator (Manager) agent")
+    reasoning_model: str = Field(default="ollama/qwen3:8b", description="Powerful model for the specialist (Worker) agents")
+
+    # Service URLs
+    chat_ollama_url: str = Field(default="http://ollama-chat:11434", description="URL for the chat model Ollama service")
+    reasoning_ollama_url: str = Field(default="http://ollama-reasoning:11434", description="URL for the reasoning model Ollama service")
 ```
 
 ## 4. Type Hinting
@@ -42,7 +46,7 @@ All agent and tool implementations must follow the patterns outlined in the [Age
 ## 6. Service Health
 
 - **Health Check Endpoint**: The FastAPI application must expose a `/api/health` endpoint.
-- **Implementation**: This endpoint should perform a basic check to confirm connectivity with the Ollama service (e.g., by listing available models). This ensures the application reports as unhealthy if its core dependency is down.
+- **Implementation**: This endpoint should perform a basic check to confirm connectivity with **both** Ollama services (e.g., by listing available models from each). This ensures the application reports as unhealthy if either of its core dependencies is down.
 
 ## 7. Naming Conventions
 

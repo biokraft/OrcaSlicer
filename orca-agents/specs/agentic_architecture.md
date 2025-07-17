@@ -11,8 +11,8 @@ The integration with `smolagents` and Ollama will be centralized through two mai
 ### `OllamaAgentFactory`
 
 - A factory class responsible for creating and configuring `smolagents` instances (`CodeAgent`, `ToolCallingAgent`).
-- It will wrap the `smolagents.LiteLLMModel` to ensure consistent connection to the Ollama service using the `ollama_base_url` from the application's configuration.
-- It will provide helper methods like `create_code_agent` and `create_tool_calling_agent` that accept a model ID and system prompt.
+- It will be initialized with the base URLs for both the chat and reasoning Ollama services.
+- It will wrap `smolagents.LiteLLMModel` and connect to the appropriate Ollama instance based on which agent is being created (Manager or Worker).
 
 ### `AgentService` / `MultiAgentOrchestrator`
 
@@ -22,16 +22,18 @@ The integration with `smolagents` and Ollama will be centralized through two mai
 
 ## 3. Multi-Agent "Manager-Worker" Architecture
 
-We will adopt a hierarchical manager/worker pattern to separate concerns and improve robustness.
+We will adopt a hierarchical manager/worker pattern, with each type of agent connected to a dedicated Ollama instance for optimal performance.
 
 - **Manager Agent**:
     - **Type**: `smolagents.CodeAgent`
-    - **Model**: A powerful reasoning model (e.g., `ollama/qwen:7b`), configurable via `REASONING_MODEL` env var.
-    - **Role**: Understands the user's high-level goal, breaks it down into sub-tasks, and delegates them to the appropriate worker agents. It does not have direct access to tools, only to `ManagedAgent` workers.
+    - **Model**: A smaller, faster model (e.g., `ollama/qwen3:0.6b`), configurable via `PRIMARY_MODEL` env var.
+    - **Connection**: Connects to the `ollama-chat` service.
+    - **Role**: As the orchestrator, this agent's primary role is fast, efficient task delegation. It understands the user's goal and routes sub-tasks to the appropriate specialized worker agents.
 - **Worker Agents**:
     - **Type**: `smolagents.ToolCallingAgent` wrapped in `smolagents.ManagedAgent`.
-    - **Model**: A smaller, faster model (e.g., `ollama/qwen3:0.6b`), configurable via `PRIMARY_MODEL` env var.
-    - **Role**: Each worker is specialized for a specific domain (e.g., web browsing, file system operations). The `ManagedAgent` wrapper exposes it as a "tool" to the Manager.
+    - **Model**: A powerful reasoning model (`ollama/qwen3:8b`), configurable via `REASONING_MODEL` env var.
+    - **Connection**: Connects to the `ollama-reasoning` service.
+    - **Role**: Each worker is a specialist. It uses the powerful reasoning model to execute complex tasks requiring deep understanding, such as web analysis or code generation.
 
 ### Example: Web Surfing Delegation
 

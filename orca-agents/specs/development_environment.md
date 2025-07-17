@@ -7,7 +7,7 @@ This document provides a comprehensive guide for setting up and managing a local
 ## 2. Core Tools
 
 -   **Package Manager:** **`uv`** is the sole tool for managing Python dependencies and virtual environments.
--   **Containerization:** **Docker** and **Docker Compose** are used to run the application and its services (`api`, `ollama`, `ollama-init`).
+-   **Containerization:** **Docker** and **Docker Compose** are used to run the application and its services (`api`, `ollama-chat`, `ollama-reasoning`, `ollama-init`).
 -   **Task Runner:** A **`Makefile`** provides a set of convenient commands for common development tasks.
 
 ## 3. Initial Setup
@@ -17,11 +17,15 @@ This document provides a comprehensive guide for setting up and managing a local
 3.  **Configure Environment Variables**:
     -   Create a file named `.env` in the project root.
     -   Copy the contents of `.env.example` into it.
-    -   Modify the `.env` file to select the desired LLM models for local development. For example:
+    -   Modify the `.env` file to select the desired LLM models and define the service URLs. For example:
         ```env
         # .env
         PRIMARY_MODEL=ollama/qwen3:0.6b
-        REASONING_MODEL=ollama/qwen:7b
+        REASONING_MODEL=ollama/qwen3:8b
+
+        # Base URLs for the dedicated Ollama containers
+        CHAT_OLLAMA_URL=http://ollama-chat:11434
+        REASONING_OLLAMA_URL=http://ollama-reasoning:11434
         ```
 4.  **Build and Start Services**:
     ```bash
@@ -29,8 +33,8 @@ This document provides a comprehensive guide for setting up and managing a local
     ```
     This single command will:
     -   Build the `api` Docker image.
-    -   Start the `ollama` service.
-    -   Run the `ollama-init` service to pull the models defined in your `.env` file.
+    -   Start the `ollama-chat` and `ollama-reasoning` services.
+    -   Run the `ollama-init` service to pull the models into their respective services.
     -   Start the `api` service with hot-reloading.
 
 ## 4. `pyproject.toml` Structure
