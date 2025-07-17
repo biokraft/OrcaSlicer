@@ -1,47 +1,24 @@
-# Backend Architecture Specification
+# Architecture Specification
 
 ## 1. Purpose
 
-This document details the architecture of the Orca Agents backend, a containerized system designed for performance, scalability, and ease of development.
+This document provides a high-level overview of the backend system architecture. It defines the major components and their interactions, establishing the technical foundation for the Orca Agents project.
+
+For detailed information on the agent-based implementation, please see the [Agentic Architecture Specification](agentic_architecture.md).
 
 ## 2. System Components
 
-The backend consists of three core components orchestrated by Docker Compose:
+The backend consists of three primary services orchestrated with Docker Compose:
 
-1.  **API Server (`api` service):** A Python **FastAPI** application serving as the primary interface for the OrcaSlicer GUI.
-2.  **Inference Server (`ollama` service):** A standard **Ollama** container that downloads, runs, and exposes LLMs.
-3.  **Reverse Proxy (`caddy` service - Optional):** A Caddy container can be added for SSL termination, simplified routing, or to serve a potential web-based admin UI in the future.
+- **`api` service**: The core FastAPI application that serves the public-facing API. It houses the agent logic built with `smolagents`. It is defined in `Dockerfile.api`.
+- **`ollama` service**: A container running the Ollama server, providing access to local LLMs like `qwen`. This service is pulled directly from the public Ollama image.
+- **`dev-tools` service** (development only): A container with essential development and debugging tools.
 
-## 3. Containerization
+## 3. Network & Communication
 
-### 3.1. Dockerfile (`Dockerfile.api`)
+- The `api` service communicates with the `ollama` service over the internal Docker network. The base URL for the Ollama service will be managed via environment variables (e.g., `OLLAMA_BASE_URL=http://ollama:11434`).
+- The FastAPI application will be exposed to the host machine on a designated port (e.g., `8000`).
 
--   **Base Image:** `python:3.13-slim` to keep the image size minimal.
--   **Package Installation:** Uses `uv` to install dependencies from `pyproject.toml` in a multi-stage build to optimize caching and reduce final image size.
--   **User:** Runs the application as a non-root user for enhanced security.
--   **Entrypoint:** Uses `uvicorn` to run the FastAPI application.
+## 4. Configuration
 
-### 3.2. Docker Compose (`docker-compose.yml`)
-
--   **Services:** Defines the `api` and `ollama` services.
--   **Networking:** Both services share a custom bridge network (`orca-net`) to enable communication via service names (e.g., `http://ollama:11434`).
--   **Volumes:**
-    -   A named volume (`ollama_data`) is used to persist downloaded LLM models, preventing re-downloads on container restarts.
-    -   Bind mounts are used during development to hot-reload the FastAPI application on code changes.
-
-## 4. Configuration Management
-
--   **Method:** Application configuration will be managed via environment variables.
--   **Loading:** Pydantic's `BaseSettings` will be used to load environment variables into a typed configuration object.
--   **Key Variables:**
-    -   `OLLAMA_URL`: The URL for the Ollama service (e.g., `http://ollama:11434`).
-    -   `LOG_LEVEL`: The application's logging level (e.g., `INFO`, `DEBUG`).
-    -   `DEFAULT_MODEL`: The default Qwen3 model to use if none is specified by the client.
-
-## 5. Asynchronous Processing
-
-The entire stack is asynchronous to ensure high throughput and responsiveness.
-
--   **FastAPI:** Natively asynchronous.
--   **HTTPX:** The `httpx` library will be used to make non-blocking HTTP requests from the API server to the Ollama service.
--   **Streaming:** Responses from Ollama will be streamed back to the client, allowing the OrcaSlicer GUI to display the AI's response token-by-token. 
+Application configuration (e.g., API keys, model names, Ollama URL) will be managed through environment variables and loaded at runtime, following 12-factor app principles. 

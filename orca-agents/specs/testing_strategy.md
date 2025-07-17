@@ -1,48 +1,39 @@
-# Python Testing Strategy Specification
+# Python Testing Strategy
 
 ## 1. Purpose
 
-This document outlines the testing strategy for the Orca Agents Python backend. The goal is to ensure the reliability, correctness, and performance of the API through a multi-layered testing approach.
+This document outlines the testing strategy for the Python backend of Orca Agents. The goal is to ensure the reliability, correctness, and robustness of the API and the underlying agentic system.
 
 ## 2. Testing Framework
 
--   **Framework:** **`pytest`** will be used as the primary framework for writing and running all tests.
--   **HTTP Client:** The **`httpx`** library will be used within tests to make asynchronous requests to the FastAPI application.
--   **Test Runner:** Tests will be executed via a `Makefile` command (e.g., `make test`).
+- **Framework**: We will use `pytest` as the primary testing framework.
+- **Runner**: Tests will be executed via `uv run pytest`.
 
 ## 3. Test Types
 
-### 3.1. Unit Tests
+### 3.1 Unit Tests
 
--   **Scope:** Focus on testing individual functions and classes in isolation.
--   **Examples:**
-    -   Testing Pydantic model validation logic.
-    -   Testing utility functions.
-    -   Testing the logic within service-layer components.
--   **Mocks:** External dependencies, especially the Ollama service, will be mocked using `pytest-mock` to ensure that unit tests are fast and self-contained.
+- **Scope**: Unit tests will focus on individual components in isolation.
+- **Targets**:
+    - **API Logic**: Test the logic within API endpoint functions, such as request validation and response formatting.
+    - **Tools**: Each agent tool must have dedicated unit tests to verify its functionality. This includes testing both successful execution and the raising of descriptive `ValueError` exceptions for invalid inputs.
+    - **Utility Functions**: Any helper or utility functions should be covered by unit tests.
+- **Mocking**: External services, like the Ollama API and agent LLM calls, will be heavily mocked to ensure tests are fast and deterministic.
 
-### 3.2. Integration Tests
+### 3.2 Integration Tests
 
--   **Scope:** Focus on testing the interaction between different components of the system.
--   **Environment:** Integration tests will run against a live, containerized instance of the API, which in turn communicates with a real Ollama container. This provides a test environment that closely mirrors production.
--   **Examples:**
-    -   Sending a request to the `POST /api/chat` endpoint and verifying that a valid, streamed response is received from the connected Ollama service.
-    -   Testing error handling when the Ollama service is unavailable or returns an error.
+- **Scope**: Integration tests will verify the interaction between different components of the system.
+- **Targets**:
+    - **API and Agent Interaction**: Test the full flow from receiving a request at the `/api/chat` endpoint to invoking the agent system and returning a response.
+    - **Multi-Agent Communication**: Verify that the Manager Agent correctly delegates tasks to Worker Agents. This will involve mocking the LLM responses to control the agent's behavior and asserting that the correct worker is called.
+    - **Memory Management**: Test the conversational memory system, ensuring that context is maintained when a `conversation_id` is provided and that memory pruning callbacks function as expected.
 
 ## 4. Test Organization
 
--   **Location:** All tests will be located in a top-level `tests/` directory within the `py-agents` project.
--   **Structure:** The `tests/` directory will mirror the structure of the `src/` directory.
-    -   `tests/unit/`: Contains all unit tests.
-    -   `tests/integration/`: Contains all integration tests.
--   **Fixtures:** Reusable test setup code, such as creating an `httpx` client instance, will be managed using `pytest` fixtures in `tests/conftest.py`.
+- All tests will be located in the `tests/` directory.
+- The directory structure within `tests/` will mirror the application's source code structure (e.g., `tests/tools/` for tool tests).
 
 ## 5. Continuous Integration (CI)
 
--   **Automation:** The test suite will be run automatically on every push and pull request using a CI pipeline (e.g., GitHub Actions).
--   **Pipeline Steps:**
-    1.  Set up the Python environment using `uv`.
-    2.  Run the linter (`make lint`).
-    3.  Build and start the Docker containers (`make up`).
-    4.  Run the tests (`make test`).
-    5.  Report the test results and coverage. 
+- All tests will be run automatically in a CI pipeline on every push and pull request to the main branch.
+- The pipeline will also run the `ruff` linter and formatter to ensure code quality. 

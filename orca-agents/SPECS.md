@@ -19,15 +19,17 @@ This project, codenamed "Orca Agents," provides the containerized Python backend
 
 | Phase | Focus Area | Key Deliverables | Related Specs | Status |
 |---|---|---|---|---|
-| **Phase 1: Foundation** | Project Scaffolding | Create `pyproject.toml` and initial directory structure for `orca_agents`. | `development_environment.md` | TBD |
-| | Dev Environment | Configure `uv`, `ruff`, and `pre-commit` hooks. | `development_environment.md` | TBD |
+| **Phase 1: Foundation** | Project Scaffolding | Create `pyproject.toml` and initial `orca_agents` directory structure. | `development_environment.md` | TBD |
+| | Dev Environment | Configure `uv`, `ruff`, `pre-commit`, and create `Makefile` for common tasks. | `development_environment.md`, `coding_standards.md` | TBD |
 | | Docker Setup | Create `Dockerfile.api` and `docker-compose.yml` for `api` and `ollama` services. | `architecture.md` | TBD |
-| **Phase 2: Core API & Agent** | FastAPI Application | Basic FastAPI app with `/api/health` and `/api/chat` endpoints. | `api_endpoints.md` | TBD |
-| | Manager Agent | Implement the main `ManagerAgent` with `LiteLLMModel` integration. | `agentic_architecture.md` | TBD |
-| | Chat Session Management | Implement `conversation_id` logic to manage conversational state. | `api_endpoints.md` | TBD |
+| | CI Pipeline | Set up CI pipeline to run `lint` and `test` on all pull requests. | `testing_strategy.md` | TBD |
+| **Phase 2: Core API & Agent** | FastAPI Application | Implement FastAPI app with `/api/health`, `/api/chat`, and Pydantic models. | `api_endpoints.md`, `coding_standards.md` | TBD |
+| | Manager Agent | Implement the main `ManagerAgent` with `LiteLLMModel` integration for Ollama. | `agentic_architecture.md` | TBD |
+| | Unit Tests (Core) | Implement unit tests for API logic and core utilities, mocking external services. | `testing_strategy.md` | TBD |
+| | Chat Session Management | Implement `conversation_id` logic to manage stateful conversations. | `api_endpoints.md`, `agentic_architecture.md` | TBD |
 | **Phase 3: Worker Agents & Tools** | Web Surfer Agent | Create the `WebSurferAgent` worker with search and scrape tools. | `agentic_architecture.md` | TBD |
-| | Tool Unit Tests | Implement unit tests for all tools, verifying success and error cases. | `testing_strategy.md` | TBD |
+| | Tool Unit Tests | Implement unit tests for all agent tools, verifying success and error cases. | `testing_strategy.md` | TBD |
 | | Multi-Agent Integration | Integrate the `WebSurferAgent` as a `ManagedAgent` into the `ManagerAgent`. | `agentic_architecture.md` | TBD |
-| **Phase 4: Advanced Features & Testing** | Memory Pruning | Implement a `step_callbacks` function for robust memory management. | `agentic_architecture.md` | TBD |
-| | Integration Tests | Develop integration tests for the multi-agent communication flow. | `testing_strategy.md` | TBD |
-| | Configuration | Finalize environment variable handling for all configurable settings. | `architecture.md` | TBD | 
+| **Phase 4: Advanced Features & Testing** | Memory Pruning | Implement a `step_callbacks` function for robust conversation memory management. | `agentic_architecture.md` | TBD |
+| | Integration Tests | Develop integration tests for multi-agent delegation and memory persistence. | `testing_strategy.md` | TBD |
+| | Configuration | Finalize environment variable handling for all settings (e.g., model names, URLs). | `architecture.md` | TBD | 

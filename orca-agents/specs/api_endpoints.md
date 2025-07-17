@@ -2,69 +2,56 @@
 
 ## 1. Purpose
 
-This document provides a detailed specification for all API endpoints exposed by the Orca Agents backend. It includes routes, request/response schemas, and status codes.
+This document provides a detailed specification for all API endpoints in the Orca Agents backend. It defines the request/response schemas and the expected behavior for each endpoint.
 
-## 2. General Principles
+## 2. Base URL
 
--   **Base URL:** All API routes are prefixed with `/api`.
--   **Authentication:** No authentication is required, as the API is only exposed to the local machine and is intended for communication with the OrcaSlicer GUI.
--   **Error Handling:** The API will return standard HTTP status codes and a JSON response body with an `error` key for failed requests.
+The API will be served under the `/api` prefix.
 
-## 3. Core Endpoints
+## 3. Endpoints
 
-### 3.1. Health Check
+### 3.1 Health Check
 
--   **Route:** `GET /api/health`
--   **Description:** A simple endpoint to verify that the API server is running and accessible.
--   **Success Response:**
-    -   **Code:** `200 OK`
-    -   **Body:** `{"status": "ok"}`
+- **Endpoint**: `GET /api/health`
+- **Description**: A simple endpoint to verify that the API service is running and healthy.
+- **Request Body**: None.
+- **Success Response (200 OK)**:
+  ```json
+  {
+    "status": "ok"
+  }
+  ```
 
-### 3.2. Chat Interaction
+### 3.2 Chat Endpoint
 
--   **Route:** `POST /api/chat`
--   **Description:** The primary endpoint for handling chat interactions. It receives a user's query and streams back the AI's response.
--   **Request Body:**
+- **Endpoint**: `POST /api/chat`
+- **Description**: The primary endpoint for interacting with the AI agent. It accepts a user's message and optionally a conversation ID to maintain state. The underlying agentic logic, including memory management and tool use, is detailed in the [Agentic Architecture Specification](agentic_architecture.md).
+- **Request Body**: `ChatRequest`
+  ```python
+  from pydantic import BaseModel, Field
+  from typing import Optional
 
-    ```json
-    {
-      "message": "Why is my first layer not sticking to the bed?",
-      "model": "qwen3-8b",
-      "stream": true,
-      "options": {
-        "temperature": 0.8
-      }
-    }
-    ```
+  class ChatRequest(BaseModel):
+      """
+      Represents a user's message to the chat endpoint.
+      """
+      message: str = Field(..., description="The user's message or query.")
+      conversation_id: Optional[str] = Field(None, description="An optional ID to maintain conversational context.")
+  ```
+- **Success Response (200 OK)**: `ChatResponse`
+  - The response will be a streaming response (`StreamingResponse`) that yields chunks of a JSON object. The client will need to assemble these chunks. Each chunk is a part of the `ChatResponse` model.
+  ```python
+  from pydantic import BaseModel, Field
 
-    -   **`message` (str, required):** The user's query.
-    -   **`model` (str, optional):** The specific Qwen3 model to use. If omitted, the backend's default model is used.
-    -   **`stream` (bool, optional):** Whether to stream the response. Defaults to `true`.
-    -   **`options` (dict, optional):** A dictionary of Ollama-specific parameters to pass to the model.
+  class ChatResponse(BaseModel):
+      """
+      Represents the agent's response to a user's message.
+      """
+      reply: str = Field(..., description="The agent's text response.")
+      conversation_id: str = Field(..., description="The ID for the current conversation, to be used in subsequent requests.")
+  ```
 
--   **Success Response (Streaming):**
-    -   **Code:** `200 OK`
-    -   **Content-Type:** `text/event-stream`
-    -   **Body:** A stream of JSON objects, where each object represents a token from the model's response, following the Ollama streaming API format.
-        ```json
-        {"token": "The", "done": false}
-        {"token": " first", "done": false}
-        {"token": " layer...", "done": false}
-        {"done": true}
-        ```
+## 4. Error Handling
 
--   **Success Response (Non-Streaming):**
-    -   **Code:** `200 OK`
-    -   **Content-Type:** `application/json`
-    -   **Body:** A single JSON object containing the full response.
-        ```json
-        {"response": "The first layer..."}
-        ```
-
--   **Error Responses:**
-    -   **Code:** `422 Unprocessable Entity` (if the request body is invalid).
-    -   **Code:** `500 Internal Server Error` (if the backend fails to communicate with Ollama).
-
-## 4. Pydantic Models
-
-The request and response schemas will be enforced using Pydantic models to ensure type safety and automatic validation. These models will be defined in a dedicated `api.schemas` module. 
+- **4xx Client Errors**: If the request is invalid (e.g., missing fields, incorrect types), the API will return a `422 Unprocessable Entity` response with a detailed JSON body explaining the validation errors.
+- **5xx Server Errors**: If an unexpected error occurs on the server (e.g., cannot connect to Ollama, unhandled exception in an agent tool), the API will return a `500 Internal Server Error` response with a generic error message. 

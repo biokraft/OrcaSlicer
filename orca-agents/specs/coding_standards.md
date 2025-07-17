@@ -1,60 +1,36 @@
-# Python Coding Standards Specification
+# Python Coding Standards
 
 ## 1. Purpose
 
-This document defines the coding standards, formatting guidelines, and linting rules for the Orca Agents Python project. Adherence to these standards is mandatory to ensure code quality, readability, and consistency across the codebase.
+This document defines the coding standards and practices for the Python backend of Orca Agents. Adhering to these standards ensures code quality, consistency, and maintainability.
 
-## 2. Formatter and Linter
+## 2. Code Formatting & Linting
 
--   **Tool:** **`Ruff`** will be used as the all-in-one tool for formatting and linting. It is chosen for its exceptional performance and comprehensive feature set.
--   **Configuration:** All `Ruff` rules and settings will be defined in the `[tool.ruff]` section of the `pyproject.toml` file.
+- **Linter & Formatter**: We use `Ruff` for both linting and formatting. It should be configured in `pyproject.toml`.
+- **Configuration**: The `ruff` configuration will enforce a line length of 88 characters and follow the Black formatting style.
+- **Pre-commit**: A `pre-commit` hook should be configured to run `ruff` on every commit to automatically format code and report linting errors.
 
-### 2.1. Formatting
+## 3. Type Hinting
 
--   **Enforcement:** Code will be formatted according to the rules configured in `[tool.ruff.format]`.
--   **Line Length:** The maximum line length will be set to 88 characters to align with common Python standards (e.g., Black).
--   **Workflow:** Developers should run `make format` or configure their IDE to format on save. The CI pipeline will fail if unformatted code is pushed.
+- **Requirement**: All functions and methods must include type hints for their arguments and return values.
+- **Pydantic**: We use Pydantic V2 for defining all data structures and API schemas. This ensures data validation and serialization are handled robustly.
 
-### 2.2. Linting
+## 4. Agent & Tool Development
 
--   **Rule Set:** The linter will be configured with a curated set of rules from `Ruff`'s extensive library, including:
-    -   `pycodestyle` (E) and `pyflakes` (F) for basic error checking.
-    -   `isort` (I) for import sorting.
-    -   `flake8-bugbear` (B) for finding potential bugs.
-    -   `flake8-annotations` (ANN) for enforcing type hint usage.
--   **Workflow:** Developers should run `make lint` to check for violations. The CI pipeline will enforce this as a required check.
+All agent and tool implementations must follow the principles outlined in the [Agentic Architecture Specification](agentic_architecture.md). Key requirements include:
 
-## 3. Naming Conventions
+- **Descriptive Docstrings**: Every tool must have a comprehensive docstring explaining its function, arguments, and return value.
+- **Clear Error Handling**: Tools must raise descriptive `ValueError` exceptions on failure.
+- **Agent Simplicity**: Keep agents focused on specific tasks, following the manager/worker pattern.
 
--   **Modules:** `lower_case_with_underscores`.
--   **Classes:** `PascalCase`.
--   **Functions & Variables:** `lower_case_with_underscores`.
--   **Constants:** `UPPER_CASE_WITH_UNDERSCORES`.
+## 5. Naming Conventions
 
-## 4. Type Hinting
-
--   **Requirement:** All function signatures and class attributes must include type hints.
--   **Style:** Use modern type hinting syntax (e.g., `list[str]` instead of `List[str]`).
--   **Enforcement:** The `flake8-annotations` linting rule (`ANN`) will be enabled to enforce the presence of type hints.
-
-## 5. Docstrings
-
--   **Requirement:** All public modules, functions, classes, and methods must have a docstring.
--   **Format:** Docstrings should follow the [**Google Python Style Guide**](https://google.github.io/styleguide/pyguide.html#3.8-comments-and-docstrings).
-    ```python
-    """A brief summary of the function.
-
-    Args:
-        arg1 (str): Description of the first argument.
-        arg2 (int): Description of the second argument.
-
-    Returns:
-        bool: Description of the return value.
-    """
-    ```
+- **Variables & Functions**: `snake_case`
+- **Classes**: `PascalCase`
+- **Constants**: `UPPER_SNAKE_CASE`
+- **Modules**: `snake_case`
 
 ## 6. Logging
 
--   **Library:** The standard Python `logging` module will be used for all application logging.
--   **Configuration:** Logging will be configured in the main application entrypoint to ensure consistent formatting and output.
--   **Usage:** Libraries and sub-modules should get a logger instance via `logging.getLogger(__name__)`. 
+- Standard `logging` module should be used for application-level logging.
+- `print()` statements are acceptable within agent tools for providing step-by-step information to the LLM, as described in the `smolagents` guidelines. 
