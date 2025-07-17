@@ -28,6 +28,7 @@ FROM base AS development
 # Create virtual environment and install all dependencies (including dev)
 RUN uv venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
+ENV VIRTUAL_ENV="/opt/venv"
 RUN --mount=type=cache,target=/opt/uv-cache \
     uv sync --frozen
 
@@ -41,7 +42,7 @@ RUN mkdir -p /app/logs
 EXPOSE 8000
 
 # Development command with hot reload
-CMD ["uvicorn", "orca_agents.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+CMD ["uv", "run", "uvicorn", "orca_agents.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
 
 # Production stage
 FROM base AS production
@@ -49,6 +50,7 @@ FROM base AS production
 # Create virtual environment and install production dependencies only
 RUN uv venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
+ENV VIRTUAL_ENV="/opt/venv"
 RUN --mount=type=cache,target=/opt/uv-cache \
     uv sync --frozen --no-dev
 
@@ -71,4 +73,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
 EXPOSE 8000
 
 # Production command
-CMD ["uvicorn", "orca_agents.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"] 
+CMD ["uv", "run", "uvicorn", "orca_agents.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]

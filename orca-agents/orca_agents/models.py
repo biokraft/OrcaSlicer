@@ -43,3 +43,11 @@ class ChatResponse(BaseModel):
     processing_time_ms: int = Field(
         ..., description="Time taken to process the request in milliseconds"
     )
+
+
+class ModelsResponse(BaseModel):
+    """Response model for the models endpoint."""
+
+    models: list[str] = Field(..., description="List of all available models")
+    chat_model: str = Field(..., description="Default chat model")
+    reasoning_model: str = Field(..., description="Default reasoning model")

@@ -2,6 +2,7 @@
 __pycache__/
 *.py[cod]
 *$py.class
+.cursor/
 
 # C extensions
 *.so
@@ -303,4 +304,4 @@ docs/_build/
 .local/
 
 # UV specific (we want to keep uv.lock)
-# .uv_cache/ # Uncomment if you don't want to cache UV downloads 
+# .uv_cache/ # Uncomment if you don't want to cache UV downloads

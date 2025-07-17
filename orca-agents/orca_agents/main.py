@@ -7,9 +7,9 @@ from datetime import datetime
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
-from .config import get_settings
-from .models import ChatRequest, ChatResponse
 from .agents import MultiAgentOrchestrator
+from .config import get_settings
+from .models import ChatRequest, ChatResponse, ModelsResponse
 
 settings = get_settings()
 
@@ -43,6 +43,7 @@ async def health_check() -> dict[str, str | bool]:
         "environment": settings.environment,
     }
 
+
 @app.get("/api/health")
 async def api_health_check() -> dict[str, str | bool]:
     """Detailed API health check endpoint."""
@@ -65,18 +66,15 @@ async def root() -> dict[str, str]:
     }
 
 
-@app.get("/api/models")
-async def list_models() -> dict[str, list[str]]:
+@app.get("/api/models", response_model=ModelsResponse)
+async def list_models() -> ModelsResponse:
     """List available AI models."""
     # Return the configured models for now
-    return {
-        "models": [
-            settings.chat_model,
-            settings.reasoning_model
-        ],
-        "chat_model": settings.chat_model,
-        "reasoning_model": settings.reasoning_model,
-    }
+    return ModelsResponse(
+        models=[settings.chat_model, settings.reasoning_model],
+        chat_model=settings.chat_model,
+        reasoning_model=settings.reasoning_model,
+    )
 
 
 @app.post("/api/chat", response_model=ChatResponse)
@@ -90,12 +88,12 @@ async def chat(request: ChatRequest) -> ChatResponse:
 
         # Use the multi-agent orchestrator
         use_manager = request.model == settings.reasoning_model or request.use_manager
-        
+
         response_message = await orchestrator.process_message(
             conversation_id=conversation_id,
             message=request.message,
             use_manager=use_manager,
-            reset_context=getattr(request, 'reset_context', False),
+            reset_context=getattr(request, "reset_context", False),
         )
 
         # Calculate processing time
@@ -104,16 +102,16 @@ async def chat(request: ChatRequest) -> ChatResponse:
         return ChatResponse(
             message=response_message,
             conversation_id=conversation_id,
-            model=request.model or (settings.reasoning_model if use_manager else settings.chat_model),
+            model=request.model
+            or (settings.reasoning_model if use_manager else settings.chat_model),
             timestamp=datetime.now(),
             processing_time_ms=processing_time_ms,
         )
 
     except Exception as e:
         raise HTTPException(
-            status_code=500,
-            detail=f"Internal server error: {str(e)}"
-        )
+            status_code=500, detail=f"Internal server error: {str(e)}"
+        ) from e
 
 
 @app.delete("/api/conversations/{conversation_id}")
@@ -124,8 +122,7 @@ async def clear_conversation(conversation_id: str) -> dict[str, str]:
         return {"message": f"Conversation {conversation_id} cleared successfully"}
     else:
         raise HTTPException(
-            status_code=404,
-            detail=f"Conversation {conversation_id} not found"
+            status_code=404, detail=f"Conversation {conversation_id} not found"
         )
 
 
@@ -144,6 +141,5 @@ async def get_conversation_stats(conversation_id: str) -> dict:
         return stats
     else:
         raise HTTPException(
-            status_code=404,
-            detail=f"Conversation {conversation_id} not found"
+            status_code=404, detail=f"Conversation {conversation_id} not found"
         )

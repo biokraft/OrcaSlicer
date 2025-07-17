@@ -68,7 +68,7 @@ up: ## Start all services (API + Ollama)
 	@/bin/echo -e "$(BLUE)Starting services...$(RESET)"
 	$(DOCKER_COMPOSE) up -d --build
 	@/bin/echo -e "$(GREEN)Services started$(RESET)"
-	@/bin/echo -e "$(YELLOW)API available at: http://localhost:8000$(RESET)"
+	@/bin/echo -e "$(YELLOW)API available at: http://localhost:8001$(RESET)"
 	@/bin/echo -e "$(YELLOW)Ollama available at: http://localhost:11434$(RESET)"
 
 down: ## Stop all services
@@ -185,4 +185,4 @@ check-tools:
 	@which $(DOCKER_COMPOSE) > /dev/null || (/bin/echo -e "$(RED)Error: docker-compose is not installed$(RESET)" && exit 1)
 
 # Run tool checks before most operations
-install dev-setup up: | check-tools 
+install dev-setup up: | check-tools
