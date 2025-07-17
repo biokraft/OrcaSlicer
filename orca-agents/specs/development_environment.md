@@ -7,61 +7,75 @@ This document provides a comprehensive guide for setting up and managing a local
 ## 2. Core Tools
 
 -   **Package Manager:** **`uv`** is the sole tool for managing Python dependencies and virtual environments.
--   **Containerization:** **Docker** and **Docker Compose** are used to run the application and its services.
+-   **Containerization:** **Docker** and **Docker Compose** are used to run the application and its services (`api`, `ollama`, `ollama-init`).
 -   **Task Runner:** A **`Makefile`** provides a set of convenient commands for common development tasks.
 
 ## 3. Initial Setup
 
-1.  **Clone the Repository:** Obtain the source code from the project repository.
-2.  **Install `uv`:** Follow the official `uv` installation instructions for your operating system.
-3.  **Create a Virtual Environment:** From the `py-agents` directory, run:
+1.  **Clone the Repository**.
+2.  **Install `uv` and Docker**.
+3.  **Configure Environment Variables**:
+    -   Create a file named `.env` in the project root.
+    -   Copy the contents of `.env.example` into it.
+    -   Modify the `.env` file to select the desired LLM models for local development. For example:
+        ```env
+        # .env
+        PRIMARY_MODEL=ollama/qwen3:0.6b
+        REASONING_MODEL=ollama/qwen:7b
+        ```
+4.  **Build and Start Services**:
     ```bash
-    uv venv
+    make up
     ```
-    This creates a `.venv` directory.
-4.  **Activate the Environment:**
-    -   **Linux/macOS:** `source .venv/bin/activate`
-    -   **Windows:** `.venv\Scripts\activate`
-5.  **Install Dependencies:**
-    ```bash
-    uv sync
-    ```
-    This command installs all dependencies listed in `pyproject.toml` into the virtual environment.
+    This single command will:
+    -   Build the `api` Docker image.
+    -   Start the `ollama` service.
+    -   Run the `ollama-init` service to pull the models defined in your `.env` file.
+    -   Start the `api` service with hot-reloading.
 
 ## 4. `pyproject.toml` Structure
 
-The `pyproject.toml` file is the central configuration file.
+The `pyproject.toml` file is the central configuration file for Python dependencies.
 
--   **`[project]`:** Defines project metadata like `name`, `version`, and `dependencies`.
+-   **`[project]`:** Defines project metadata and `dependencies`.
 -   **`[project.optional-dependencies]`:**
-    -   `dev`: Specifies development-only dependencies, such as `pytest` and `ruff`.
--   **`[tool.uv.sources]`:** (If needed) Specifies any private package indexes.
+    -   `dev`: Specifies development-only dependencies like `pytest` and `ruff`.
 -   **`[tool.ruff]`:** Configures the `ruff` linter and formatter.
 
-To install development dependencies, a developer would run `uv sync --all-extras`.
+To install dependencies locally (e.g., for IDE integration), create and activate a virtual environment:
+```bash
+uv venv
+source .venv/bin/activate
+uv sync --all-extras
+```
 
-## 5. Development Workflow
+## 5. Development Workflow with Docker
+
+The primary development workflow is container-based to ensure consistency with production.
 
 ### 5.1. Running the Backend
 
 -   **Command:** `make up`
--   **Action:** Starts the `api` and `ollama` services using `docker-compose up`. The `api` service will be configured with hot-reloading, so any changes to the Python code will automatically restart the server.
+-   **Action:** Runs `docker-compose up --build`. This starts all services. The `api` service volume-mounts the source code, enabling hot-reloading on code changes.
 
-### 5.2. Managing Dependencies
+### 5.2. Stopping the Backend
 
--   **Adding a dependency:** `uv add <package-name>`
--   **Adding a dev dependency:** `uv add --dev <package-name>`
--   **Removing a dependency:** `uv remove <package-name>`
--   **Syncing the environment:** `uv sync` (or `uv sync --all-extras` for dev)
+-   **Command:** `make down`
+-   **Action:** Stops and removes the running containers.
 
-### 5.3. Running Tests
+### 5.3. Managing Dependencies
+
+-   **Adding:** `uv add <package-name>`
+-   **Removing:** `uv remove <package-name>`
+-   **Updating `pyproject.toml`**: After modifying dependencies, they are automatically synced within the container on the next `make up`. For your local environment, run `uv sync --all-extras`.
+
+### 5.4. Running Tests
 
 -   **Command:** `make test`
--   **Action:** Executes the `pytest` test suite against the running API container to ensure a production-like testing environment.
+-   **Action:** Executes the `pytest` suite inside the `api` container.
 
-### 5.4. Linting and Formatting
+### 5.5. Linting and Formatting
 
--   **Command:** `make lint`
--   **Action:** Runs `ruff check` to identify and report any code style violations.
--   **Command:** `make format`
--   **Action:** Runs `ruff format` to automatically format the codebase according to the configured rules. 
+-   **Linting:** `make lint` (runs `ruff check`)
+-   **Formatting:** `make format` (runs `ruff format`)
+-   Both commands are executed inside the `api` container. 

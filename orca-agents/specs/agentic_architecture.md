@@ -4,42 +4,54 @@
 
 This document outlines the agent-based architecture for the Orca Agents backend, based on the `smolagents` library. It details the multi-agent design pattern, LLM integration, memory management, and tool development principles that will guide the implementation.
 
-## 2. Core Principles
+## 2. Core `smolagents` Integration Pattern
 
-The agent system is built on the following principles from the `smolagents` framework:
+The integration with `smolagents` and Ollama will be centralized through two main components: an agent factory and an orchestrator service.
 
-- **Simplicity**: Agents should be as simple as possible. We will prefer deterministic code over LLM calls for simple logic and group related tool calls into single, more powerful tools.
-- **Clear Information Flow**: The reliability of the system depends on providing clear, unambiguous information to the LLM. This will be achieved through explicit task formulation and highly descriptive tool documentation.
+### `OllamaAgentFactory`
 
-## 3. Multi-Agent Architecture
+- A factory class responsible for creating and configuring `smolagents` instances (`CodeAgent`, `ToolCallingAgent`).
+- It will wrap the `smolagents.LiteLLMModel` to ensure consistent connection to the Ollama service using the `ollama_base_url` from the application's configuration.
+- It will provide helper methods like `create_code_agent` and `create_tool_calling_agent` that accept a model ID and system prompt.
+
+### `AgentService` / `MultiAgentOrchestrator`
+
+- A high-level service that manages the lifecycle of agents.
+- It will implement the **Manager-Worker** pattern.
+- It will handle per-chat caching of agent instances to maintain conversation state efficiently, using a `conversation_id`.
+
+## 3. Multi-Agent "Manager-Worker" Architecture
 
 We will adopt a hierarchical manager/worker pattern to separate concerns and improve robustness.
 
-- **Manager Agent**: A high-level `smolagents.CodeAgent` that understands the user's overall goal. It will be equipped with a more powerful reasoning model (e.g., `qwen:7b`). Its primary role is to delegate tasks to specialized worker agents.
-- **Worker Agents**: Specialized `smolagents.ToolCallingAgent` instances, each responsible for a specific domain (e.g., web browsing, file system operations). They will use smaller, faster models (e.g., `qwen:0.5b`) and will be wrapped in `smolagents.ManagedAgent` to be exposed as "tools" to the Manager Agent.
+- **Manager Agent**:
+    - **Type**: `smolagents.CodeAgent`
+    - **Model**: A powerful reasoning model (e.g., `ollama/qwen:7b`), configurable via `REASONING_MODEL` env var.
+    - **Role**: Understands the user's high-level goal, breaks it down into sub-tasks, and delegates them to the appropriate worker agents. It does not have direct access to tools, only to `ManagedAgent` workers.
+- **Worker Agents**:
+    - **Type**: `smolagents.ToolCallingAgent` wrapped in `smolagents.ManagedAgent`.
+    - **Model**: A smaller, faster model (e.g., `ollama/qwen3:0.6b`), configurable via `PRIMARY_MODEL` env var.
+    - **Role**: Each worker is specialized for a specific domain (e.g., web browsing, file system operations). The `ManagedAgent` wrapper exposes it as a "tool" to the Manager.
 
-### Example: Web Browsing System
+### Example: Web Surfing Delegation
 
-- **`ManagerAgent`**: Receives a high-level task like "Research the benefits of..."
-- **`WebSurferAgent` (Worker)**: A `ManagedAgent` equipped with `DuckDuckGoSearchTool` and `VisitWebpageTool`. The Manager delegates the "search and scrape" sub-task to this agent.
+1. **`ManagerAgent`**: Receives a high-level task: "Research the latest advancements in AI."
+2. The `ManagerAgent` determines that this requires web access and invokes the `web_searcher` managed agent.
+3. **`WebSurferAgent` (Worker)**:
+    - A `ManagedAgent` named `web_searcher` with the description: "Searches the web for current information and provides summaries."
+    - It is equipped with `DuckDuckGoSearchTool` and a web scraping tool.
+    - It executes the search, scrapes relevant content, and returns a summary to the `ManagerAgent`.
+4. The `ManagerAgent` synthesizes the results and presents the final answer.
 
-## 4. LLM Integration
+## 4. Conversational Memory Management
 
-- **`LiteLLMModel`**: We will use the `smolagents.LiteLLMModel` class as the universal adapter for all LLMs.
-- **Local Development**: For local development and testing, we will connect to a local Ollama server running models like `qwen:0.5b` and `qwen:7b`. This is configured by prefixing the model ID with `ollama/`, e.g., `ollama/qwen:7b`.
-- **Flexibility**: This approach allows for easy swapping between local models and more powerful cloud models (e.g., from Groq or Anthropic) without changing the core agent logic.
+- **Stateful Conversations**: The `AgentService` will use a `conversation_id` to retrieve or create cached agent instances. The `agent.run()` method will be called with `reset=False` to maintain context within a session.
+- **Memory Pruning**: To prevent context overflow in long conversations, a `step_callbacks` function will be attached to each agent instance. This callback will log agent steps for debugging and can be extended to implement memory pruning strategies (e.g., keeping the first message and the last N turns).
 
-## 5. Conversational Memory Management
+## 5. Tool Implementation Standards
 
-To support stateful conversations in the `/api/chat` endpoint, we will implement the following:
+All tools must adhere to the following:
 
-- **History Persistence**: The `agent.run()` method will be called with `reset=False` for subsequent turns in a single conversation to maintain context. A session or conversation ID will be used to track conversation state.
-- **Memory Pruning**: For long-running conversations, we will implement a `step_callbacks` function to prevent the context window from overflowing. This callback will prune the agent's memory, keeping the initial task and the most recent N steps.
-
-## 6. Tool Implementation Standards
-
-All tools developed for agents must adhere to the following standards:
-
-- **Descriptive Docstrings**: A tool's docstring is its API for the LLM. It must clearly describe what the tool does, all of its arguments (including format), and its return value.
-- **Informative Logging**: Tools should use `print()` statements to log important intermediate steps.
-- **Descriptive Errors**: If a tool fails, it must raise a `ValueError` with a precise message explaining what went wrong and how the agent can correct its inputs. 
+- **Descriptive Docstrings**: The docstring is the API for the LLM. It must clearly describe the tool's purpose, arguments (including data types and format), and what it returns.
+- **Informative Logging**: Use `print()` to log key actions for observability.
+- **Robust Error Handling**: If a tool fails, it must raise a `ValueError` with a clear, descriptive message that helps the agent understand the error and correct its inputs. 

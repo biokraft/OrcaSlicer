@@ -13,7 +13,7 @@ The API will be served under the `/api` prefix.
 ### 3.1 Health Check
 
 - **Endpoint**: `GET /api/health`
-- **Description**: A simple endpoint to verify that the API service is running and healthy.
+- **Description**: A simple endpoint to verify that the API service is running and healthy. **Crucially, this check will also verify connectivity to the downstream Ollama service.** It will report an unhealthy status if Ollama is not accessible.
 - **Request Body**: None.
 - **Success Response (200 OK)**:
   ```json
