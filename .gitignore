@@ -37,3 +37,4 @@ resources/profiles/user/default
 *.code-workspace
 SPECS.md
 /specs/
+/research/
