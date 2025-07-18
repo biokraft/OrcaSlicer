@@ -15,6 +15,7 @@ This project, codenamed "Orca Agents," provides the containerized Python backend
 | `specs/api_endpoints.md` | Detailed specification for all API endpoints, including request/response schemas. |
 | `specs/coding_standards.md` | Code style, linting rules, and patterns for configuration, agents, and tools. |
 | `specs/testing_strategy.md` | The strategy for testing the Python backend, including unit and integration tests for agents. |
+| `specs/database_persistence.md` | Specification for persisting chat conversations using SQLAlchemy and SQLite. |
 
 ## 2.1. Current Implementation Status
 
@@ -50,4 +51,10 @@ This project, codenamed "Orca Agents," provides the containerized Python backend
 | **Phase 4: Conversation & Deployment** | Chat Session Management | Implement `conversation_id` caching in the `MultiAgentOrchestrator`. | `agentic_architecture.md` | TBD |
 | | Memory Management | Implement `step_callbacks` for memory pruning and logging. | `agentic_architecture.md` | TBD |
 | | Integration Tests | Develop integration tests for multi-agent delegation and chat session persistence. | `testing_strategy.md` | TBD |
-| | Production Dockerfile | Create `docker-compose.prod.yml` and production-ready `Dockerfile`. | `production_deployment.md` | TBD | 
+| | Production Dockerfile | Create `docker-compose.prod.yml` and production-ready `Dockerfile`. | `production_deployment.md` | TBD |
+| **Phase 5: Database Persistence** | Database Setup | Configure SQLite, SQLAlchemy, and Alembic for migrations. | `database_persistence.md` | TBD |
+| | Models & Schemas | Implement Pydantic-based SQLAlchemy models for `Conversation` and `Message`. | `database_persistence.md` | TBD |
+| | Persistence Service | Create a service to handle saving and retrieving chat history. | `database_persistence.md` | TBD |
+| | API Integration | Add new endpoints (`/api/conversations`, `/api/conversations/{id}`) and integrate into chat logic. | `database_persistence.md`, `api_endpoints.md` | TBD |
+| | Database Unit Tests | Write unit tests for the database models and persistence service. | `testing_strategy.md` | TBD |
+| **Phase 6: UI Integration** | Chat History UI | Design and implement the UI for browsing and loading past conversations. | `database_persistence.md` | TBD |
