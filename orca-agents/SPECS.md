@@ -11,7 +11,6 @@ This project, codenamed "Orca Agents," provides the containerized Python backend
 | `specs/architecture.md` | High-level overview of the dual-Ollama container architecture, services, and networking. |
 | `specs/agentic_architecture.md` | Detailed specification for the multi-agent architecture, with Manager/Worker agents connected to separate Ollama instances. |
 | `specs/development_environment.md` | Guide for setting up a local, Docker-based development environment with multiple Ollama containers. |
-| `specs/production_deployment.md`| Strategy for deploying the application to production, with separate services for chat and reasoning models. |
 | `specs/api_endpoints.md` | Detailed specification for all API endpoints, including request/response schemas. |
 | `specs/coding_standards.md` | Code style, linting rules, and patterns for configuration, agents, and tools. |
 | `specs/testing_strategy.md` | The strategy for testing the Python backend, including unit and integration tests for agents. |
@@ -48,10 +47,9 @@ This project, codenamed "Orca Agents," provides the containerized Python backend
 | | Web Surfer Worker | Create the `WebSurferAgent` and associated web search/scrape tools. | `agentic_architecture.md`, `coding_standards.md` | TBD |
 | | Multi-Agent Integration | Integrate the `WebSurferAgent` as a `ManagedAgent` into the `ManagerAgent`. | `agentic_architecture.md` | TBD |
 | | Tool Unit Tests | Implement unit tests for all agent tools, verifying success and error cases. | `testing_strategy.md` | TBD |
-| **Phase 4: Conversation & Deployment** | Chat Session Management | Implement `conversation_id` caching in the `MultiAgentOrchestrator`. | `agentic_architecture.md` | TBD |
+| **Phase 4: Conversation & Integration** | Chat Session Management | Implement `conversation_id` caching in the `MultiAgentOrchestrator`. | `agentic_architecture.md` | TBD |
 | | Memory Management | Implement `step_callbacks` for memory pruning and logging. | `agentic_architecture.md` | TBD |
 | | Integration Tests | Develop integration tests for multi-agent delegation and chat session persistence. | `testing_strategy.md` | TBD |
-| | Production Dockerfile | Create `docker-compose.prod.yml` and production-ready `Dockerfile`. | `production_deployment.md` | TBD |
 | **Phase 5: Database Persistence** | Database Setup | Configure SQLite, SQLAlchemy, and Alembic for migrations. | `database_persistence.md` | TBD |
 | | Models & Schemas | Implement Pydantic-based SQLAlchemy models for `Conversation` and `Message`. | `database_persistence.md` | TBD |
 | | Persistence Service | Create a service to handle saving and retrieving chat history. | `database_persistence.md` | TBD |
