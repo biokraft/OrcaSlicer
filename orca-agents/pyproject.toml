@@ -59,7 +59,19 @@ testpaths = ["tests"]
 python_files = ["test_*.py", "*_test.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
-addopts = "-v --tb=short"
+addopts = "-v --tb=short --cov=orca_agents --cov-report=term-missing --cov-report=html --cov-fail-under=80"
 asyncio_mode = "auto"
 
+[tool.coverage.run]
+source = ["orca_agents"]
+omit = ["tests/*", "orca_agents/__init__.py"]
 
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+]
