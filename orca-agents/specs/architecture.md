@@ -33,4 +33,4 @@ The backend is designed as a multi-container Docker application, orchestrated wi
 
 - All services are configured to use a `json-file` logging driver for structured logging.
 - Both `ollama` services include health checks. The `api` service's health check must verify connectivity to both Ollama instances.
-- For production, a dedicated monitoring stack (e.g., Prometheus) is specified in the [Production Deployment Specification](production_deployment.md). 
+- For production, a dedicated monitoring stack (e.g., Prometheus) is specified in the [Production Deployment Specification](production_deployment.md).

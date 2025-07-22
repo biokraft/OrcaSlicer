@@ -82,4 +82,4 @@ The primary development workflow is container-based to ensure consistency with p
 
 -   **Linting:** `make lint` (runs `ruff check`)
 -   **Formatting:** `make format` (runs `ruff format`)
--   Both commands are executed inside the `api` container. 
+-   Both commands are executed inside the `api` container.

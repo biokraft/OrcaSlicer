@@ -28,26 +28,73 @@ class MultiAgentOrchestrator:
         self._conversations: dict[str, dict[str, Any]] = {}
         self._cache_lock = asyncio.Lock()
 
-        # Initialize manager agent
+        # Multi-agent system components
         self._manager_agent: CodeAgent | None = None
-        self._setup_manager()
+        self._managed_agents: dict[str, dict[str, Any]] = {}
 
-    def _setup_manager(self) -> None:
-        """Set up the manager agent with managed worker agents."""
+        # Initialize the multi-agent system
+        self._setup_multi_agent_system()
+
+    def _setup_multi_agent_system(self) -> None:
+        """Set up the full multi-agent system with manager and worker agents."""
         try:
-            # For Phase 1, use a simple manager agent
-            # Phase 3 will implement full multi-agent delegation
-            self._manager_agent = self.factory.create_manager_agent()
+            # Create managed worker agents
+            self._setup_managed_agents()
+
+            # Create manager agent with worker delegation capabilities
+            self._setup_manager_agent()
+
+            self.logger.info(
+                f"Multi-agent system initialized - Manager with {len(self._managed_agents)} workers"
+            )
+
+        except Exception as e:
+            self.logger.error(f"Failed to initialize multi-agent system: {e}")
+            # Fallback to simple chat agent
+            self._manager_agent = self.factory.create_chat_agent()
+            self.logger.warning("Falling back to simple chat agent")
+
+    def _setup_managed_agents(self) -> None:
+        """Set up managed worker agents for specialization."""
+        try:
+            # Create web surfer managed agent configuration
+            web_config = self.factory.create_managed_web_agent_config()
+            self._managed_agents["web_searcher"] = web_config
+
+            self.logger.debug("Created web surfer managed agent configuration")
+
+            # Future: Add more specialized agents here
+            # - Code analysis agent
+            # - Data processing agent
+            # - File management agent
+
+        except Exception as e:
+            self.logger.error(f"Failed to create managed agents: {e}")
+            # Continue without managed agents - manager will work with basic tools
+
+    def _setup_manager_agent(self) -> None:
+        """Set up the manager agent with worker delegation capabilities."""
+        try:
+            # Convert managed agents configurations to list for the manager
+            managed_agents_list = list(self._managed_agents.values())
+
+            # Create manager agent with managed workers
+            self._manager_agent = self.factory.create_manager_agent(
+                tools=[],  # Manager delegates to workers, no direct tools
+                max_steps=15,
+                managed_agents=managed_agents_list,
+            )
 
             # Add memory management callback
             self._manager_agent.step_callbacks = [self._create_memory_callback()]
 
-            self.logger.info("Manager agent initialized (Phase 1 - simple mode)")
+            self.logger.info(
+                f"Manager agent initialized with {len(managed_agents_list)} managed workers"
+            )
 
         except Exception as e:
             self.logger.error(f"Failed to initialize manager agent: {e}")
-            # Fallback to simple chat agent
-            self._manager_agent = self.factory.create_chat_agent()
+            raise
 
     def _create_memory_callback(self):
         """Create a callback for managing agent memory and logging."""
@@ -121,6 +168,11 @@ class MultiAgentOrchestrator:
             if use_manager and self._manager_agent:
                 agent = self._manager_agent
                 agent_type = "manager"
+
+                # For manager agent, always use the same instance (it manages state internally)
+                # but reset context based on conversation state
+                should_reset = conversation["message_count"] == 0 or reset_context
+
             else:
                 # Use or create simple chat agent for this conversation
                 if conversation["agent_instance"] is None or reset_context:
@@ -128,14 +180,15 @@ class MultiAgentOrchestrator:
                 agent = conversation["agent_instance"]
                 agent_type = "chat"
 
+                # Reset on first message or when explicitly requested
+                should_reset = conversation["message_count"] == 0 or reset_context
+
             self.logger.info(
-                f"Processing message in {conversation_id} with {agent_type} agent"
+                f"Processing message in {conversation_id} with {agent_type} agent "
+                f"(reset={should_reset})"
             )
 
             # Process message with appropriate reset behavior
-            # Reset on first message or when explicitly requested
-            should_reset = conversation["message_count"] == 0 or reset_context
-
             response = agent.run(message, reset=should_reset)
 
             # Update conversation stats
@@ -224,3 +277,27 @@ class MultiAgentOrchestrator:
                 self.logger.info(f"Cleaned up {cleaned_count} stale conversations")
 
         return cleaned_count
+
+    def get_available_workers(self) -> dict[str, str]:
+        """Get information about available worker agents.
+
+        Returns:
+            Dictionary mapping worker names to their descriptions.
+        """
+        return {
+            name: config["description"] for name, config in self._managed_agents.items()
+        }
+
+    def get_system_status(self) -> dict[str, Any]:
+        """Get status information about the multi-agent system.
+
+        Returns:
+            Dictionary with system status information.
+        """
+        return {
+            "manager_agent_available": self._manager_agent is not None,
+            "managed_agents_count": len(self._managed_agents),
+            "available_workers": list(self._managed_agents.keys()),
+            "active_conversations": len(self._conversations),
+            "system_mode": "multi-agent" if self._managed_agents else "simple",
+        }

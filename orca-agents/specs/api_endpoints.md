@@ -54,4 +54,4 @@ The API will be served under the `/api` prefix.
 ## 4. Error Handling
 
 - **4xx Client Errors**: If the request is invalid (e.g., missing fields, incorrect types), the API will return a `422 Unprocessable Entity` response with a detailed JSON body explaining the validation errors.
-- **5xx Server Errors**: If an unexpected error occurs on the server (e.g., cannot connect to Ollama, unhandled exception in an agent tool), the API will return a `500 Internal Server Error` response with a generic error message. 
+- **5xx Server Errors**: If an unexpected error occurs on the server (e.g., cannot connect to Ollama, unhandled exception in an agent tool), the API will return a `500 Internal Server Error` response with a generic error message.

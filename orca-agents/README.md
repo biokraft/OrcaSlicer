@@ -122,4 +122,4 @@ The application is configured via environment variables defined in the `.env` fi
 
 ## 📄 Specifications
 
-This project uses a "specs-as-code" approach. The `specs/` directory is the source of truth for all architecture, coding standards, and implementation details. Before contributing, please familiarize yourself with these documents. 
+This project uses a "specs-as-code" approach. The `specs/` directory is the source of truth for all architecture, coding standards, and implementation details. Before contributing, please familiarize yourself with these documents.

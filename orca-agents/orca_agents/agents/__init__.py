@@ -6,4 +6,4 @@ __all__ = [
 ]
 
 from .factory import OllamaAgentFactory
-from .orchestrator import MultiAgentOrchestrator 
+from .orchestrator import MultiAgentOrchestrator

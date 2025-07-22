@@ -36,4 +36,4 @@ This document outlines the testing strategy for the Python backend of Orca Agent
 ## 5. Continuous Integration (CI)
 
 - All tests will be run automatically in a CI pipeline on every push and pull request to the main branch.
-- The pipeline will also run the `ruff` linter and formatter to ensure code quality. 
+- The pipeline will also run the `ruff` linter and formatter to ensure code quality.

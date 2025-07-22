@@ -107,4 +107,4 @@ jobs:
         if: always()
         with:
           name: security-report
-          path: security-report.json 
+          path: security-report.json

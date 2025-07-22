@@ -45,31 +45,117 @@ class TestMultiAgentOrchestrator:
         ) as mock_factory:
             mock_agent = Mock()
             mock_factory.return_value.create_manager_agent.return_value = mock_agent
+            mock_factory.return_value.create_managed_web_agent_config.return_value = {
+                "agent": Mock(),
+                "name": "web_searcher",
+                "description": "Web search agent",
+            }
 
             orchestrator = MultiAgentOrchestrator(config)
 
             assert orchestrator._manager_agent == mock_agent
             # Verify callback was added
             assert mock_agent.step_callbacks is not None
+            # Verify managed agents were configured
+            mock_factory.return_value.create_manager_agent.assert_called_once()
+            call_kwargs = mock_factory.return_value.create_manager_agent.call_args[1]
+            assert "managed_agents" in call_kwargs
+            assert len(call_kwargs["managed_agents"]) == 1
 
-    def test_manager_agent_setup_fallback(self, config):
-        """Test manager agent setup with fallback to chat agent."""
+    def test_managed_agents_setup(self, config):
+        """Test that managed agents are set up correctly."""
         with patch(
             "orca_agents.agents.orchestrator.OllamaAgentFactory"
         ) as mock_factory:
-            # Make manager agent creation fail
-            mock_factory.return_value.create_manager_agent.side_effect = Exception(
-                "Manager failed"
+            web_config = {
+                "agent": Mock(),
+                "name": "web_searcher",
+                "description": "Web search agent",
+            }
+            mock_factory.return_value.create_managed_web_agent_config.return_value = (
+                web_config
             )
-            mock_chat_agent = Mock()
-            mock_factory.return_value.create_chat_agent.return_value = mock_chat_agent
 
-            # Test the actual fallback behavior in the setup method
             orchestrator = MultiAgentOrchestrator(config)
 
-            # The fallback is handled in the exception block, but the test framework
-            # may not call it. Let's verify the manager agent is still created
-            assert orchestrator._manager_agent is not None
+            # Verify managed agents were created
+            assert "web_searcher" in orchestrator._managed_agents
+            assert orchestrator._managed_agents["web_searcher"] == web_config
+
+    def test_get_available_workers(self, orchestrator):
+        """Test getting available worker agents."""
+        # Mock managed agents
+        orchestrator._managed_agents = {
+            "web_searcher": {
+                "name": "web_searcher",
+                "description": "Searches the web for information",
+            },
+            "code_analyst": {
+                "name": "code_analyst",
+                "description": "Analyzes and executes code",
+            },
+        }
+
+        workers = orchestrator.get_available_workers()
+
+        assert len(workers) == 2
+        assert workers["web_searcher"] == "Searches the web for information"
+        assert workers["code_analyst"] == "Analyzes and executes code"
+
+    def test_get_system_status(self, orchestrator):
+        """Test getting system status information."""
+        # Mock some state
+        orchestrator._managed_agents = {"web_searcher": {"name": "web_searcher"}}
+        orchestrator._conversations = {"conv1": {}, "conv2": {}}
+
+        status = orchestrator.get_system_status()
+
+        assert status["manager_agent_available"] is True
+        assert status["managed_agents_count"] == 1
+        assert status["available_workers"] == ["web_searcher"]
+        assert status["active_conversations"] == 2
+        assert status["system_mode"] == "multi-agent"
+
+    def test_system_status_simple_mode(self, config):
+        """Test system status when in simple mode (no managed agents)."""
+        with patch(
+            "orca_agents.agents.orchestrator.OllamaAgentFactory"
+        ) as mock_factory:
+            # Make managed agent creation fail
+            mock_factory.return_value.create_managed_web_agent_config.side_effect = (
+                Exception("Failed")
+            )
+            mock_factory.return_value.create_chat_agent.return_value = Mock()
+
+            orchestrator = MultiAgentOrchestrator(config)
+            status = orchestrator.get_system_status()
+
+            assert status["managed_agents_count"] == 0
+            assert status["system_mode"] == "simple"
+
+    @pytest.mark.asyncio
+    async def test_process_message_with_manager_multi_agent(self, orchestrator):
+        """Test processing a message with the multi-agent manager."""
+        conversation_id = "test-conv"
+        message = "Search for information about AI agents"
+
+        # Mock manager agent
+        mock_manager = Mock()
+        mock_manager.run.return_value = (
+            "Found information about AI agents using web search"
+        )
+        orchestrator._manager_agent = mock_manager
+
+        response = await orchestrator.process_message(
+            conversation_id=conversation_id, message=message, use_manager=True
+        )
+
+        assert response == "Found information about AI agents using web search"
+        mock_manager.run.assert_called_once_with(message, reset=True)
+
+        # Verify conversation was updated
+        conversation = orchestrator._conversations[conversation_id]
+        assert conversation["message_count"] == 1
 
     @pytest.mark.asyncio
     async def test_get_conversation_new(self, orchestrator):
@@ -106,28 +192,6 @@ class TestMultiAgentOrchestrator:
         assert conversation["created_at"] == original_time
         assert conversation["last_activity"] > original_time
         assert conversation["message_count"] == 5
-
-    @pytest.mark.asyncio
-    async def test_process_message_with_manager(self, orchestrator):
-        """Test processing a message with the manager agent."""
-        conversation_id = "test-conv"
-        message = "Analyze this complex problem"
-
-        # Mock manager agent
-        mock_manager = Mock()
-        mock_manager.run.return_value = "Manager response"
-        orchestrator._manager_agent = mock_manager
-
-        response = await orchestrator.process_message(
-            conversation_id=conversation_id, message=message, use_manager=True
-        )
-
-        assert response == "Manager response"
-        mock_manager.run.assert_called_once_with(message, reset=True)
-
-        # Verify conversation was updated
-        conversation = orchestrator._conversations[conversation_id]
-        assert conversation["message_count"] == 1
 
     @pytest.mark.asyncio
     async def test_process_message_with_chat_agent(self, orchestrator):

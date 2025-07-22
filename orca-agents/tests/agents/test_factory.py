@@ -121,16 +121,17 @@ class TestOllamaAgentFactory:
         assert agent is not None
         assert isinstance(agent, ToolCallingAgent)
 
-    def test_create_managed_web_agent(self, factory):
-        """Test creating a managed web agent."""
+    def test_create_managed_web_agent_config_integration(self, factory):
+        """Test the integration of managed web agent config creation."""
         with patch.object(factory, "create_web_surfer_agent") as mock_create_web:
             mock_web_agent = Mock()
             mock_create_web.return_value = mock_web_agent
 
-            agent = factory.create_managed_web_agent()
+            config = factory.create_managed_web_agent_config()
 
-            mock_create_web.assert_called_once()
-            assert agent == mock_web_agent
+            mock_create_web.assert_called_once_with(max_steps=10)
+            assert config["agent"] == mock_web_agent
+            assert config["name"] == "web_searcher"
 
     @patch("orca_agents.agents.factory.CodeAgent")
     def test_create_chat_agent(self, mock_code_agent, factory):
@@ -229,3 +230,39 @@ class TestOllamaAgentFactory:
         """Test various model naming scenarios for prefix handling."""
         model = factory.create_model(model_input)
         assert model.model_id == expected_output
+
+    def test_create_managed_web_agent_config(self, factory):
+        """Test creating a managed web agent configuration."""
+        config = factory.create_managed_web_agent_config()
+
+        # Verify it's a dictionary with the right structure
+        assert isinstance(config, dict)
+        assert "agent" in config
+        assert "name" in config
+        assert "description" in config
+
+        assert config["name"] == "web_searcher"
+        assert "web surfer" in config["description"].lower()
+        assert isinstance(config["agent"], ToolCallingAgent)
+
+    def test_create_manager_agent_with_managed_agents(self, factory):
+        """Test creating a manager agent with managed agents."""
+        web_config = factory.create_managed_web_agent_config()
+
+        with patch("orca_agents.agents.factory.CodeAgent") as mock_code_agent:
+            mock_agent_instance = Mock()
+            mock_code_agent.return_value = mock_agent_instance
+
+            agent = factory.create_manager_agent(managed_agents=[web_config])
+
+            # Verify CodeAgent was called correctly
+            mock_code_agent.assert_called_once()
+            call_kwargs = mock_code_agent.call_args[1]
+
+            assert call_kwargs["tools"] == []
+            assert call_kwargs["max_steps"] == 15
+            assert isinstance(call_kwargs["model"], LiteLLMModel)
+
+            # Verify managed agents were added
+            assert mock_agent_instance.managed_agents == [web_config]
+            assert agent == mock_agent_instance

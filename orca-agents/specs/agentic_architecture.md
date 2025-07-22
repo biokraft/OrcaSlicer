@@ -56,4 +56,4 @@ All tools must adhere to the following:
 
 - **Descriptive Docstrings**: The docstring is the API for the LLM. It must clearly describe the tool's purpose, arguments (including data types and format), and what it returns.
 - **Informative Logging**: Use `print()` to log key actions for observability.
-- **Robust Error Handling**: If a tool fails, it must raise a `ValueError` with a clear, descriptive message that helps the agent understand the error and correct its inputs. 
+- **Robust Error Handling**: If a tool fails, it must raise a `ValueError` with a clear, descriptive message that helps the agent understand the error and correct its inputs.

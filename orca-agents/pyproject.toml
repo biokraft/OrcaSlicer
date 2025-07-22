@@ -12,6 +12,9 @@ dependencies = [
     "pydantic-settings>=2.10.1",
     "smolagents>=1.20.0",
     "litellm>=1.74.4",
+    "requests>=2.32.4",
+    "ddgs>=9.2.3",
+    "duckduckgo-search>=8.1.1",
 ]
 
 [project.optional-dependencies]

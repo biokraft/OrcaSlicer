@@ -58,4 +58,4 @@ All agent and tool implementations must follow the patterns outlined in the [Age
 ## 8. Logging
 
 - Standard `logging` module should be used for application-level logging.
-- `print()` statements are acceptable within agent tools for providing step-by-step information to the LLM, as described in the `smolagents` guidelines. 
+- `print()` statements are acceptable within agent tools for providing step-by-step information to the LLM, as described in the `smolagents` guidelines.
